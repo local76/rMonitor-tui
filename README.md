@@ -62,7 +62,7 @@ Ensure you have the Rust compiler toolchain installed on Windows.
 
 1. Clone the repository and navigate to the folder:
     ```powershell
-    cd rmonitor
+    cd rMonitor
     ```
 2. Build the release binary:
     ```powershell
