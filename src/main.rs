@@ -22,6 +22,9 @@ const README_CONTENT: &str = include_str!("../README.md");
 const SUPPORT_CONTENT: &str = include_str!("../SUPPORT.md");
 const LICENSE_CONTENT: &str = include_str!("../LICENSE.md");
 const COPYRIGHT_CONTENT: &str = include_str!("../COPYRIGHT.md");
+const PRIVACY_CONTENT: &str = include_str!("../PRIVACY.md");
+const SECURITY_CONTENT: &str = include_str!("../SECURITY.md");
+const CONTRIBUTING_CONTENT: &str = include_str!("../CONTRIBUTING.md");
 
 // Damped Harmonic Oscillator (Spring Physics)
 struct Spring {
@@ -755,6 +758,15 @@ fn main() -> Result<(), io::Error> {
                                 KeyCode::F(4) => {
                                     app.open_embedded_markdown("COPYRIGHT.md", COPYRIGHT_CONTENT, &theme);
                                 }
+                                KeyCode::F(5) => {
+                                    app.open_embedded_markdown("PRIVACY.md", PRIVACY_CONTENT, &theme);
+                                }
+                                KeyCode::F(6) => {
+                                    app.open_embedded_markdown("SECURITY.md", SECURITY_CONTENT, &theme);
+                                }
+                                KeyCode::F(7) => {
+                                    app.open_embedded_markdown("CONTRIBUTING.md", CONTRIBUTING_CONTENT, &theme);
+                                }
                                 KeyCode::Up => {
                                     app.markdown_scroll = app.markdown_scroll.saturating_sub(1);
                                 }
@@ -830,7 +842,16 @@ fn main() -> Result<(), io::Error> {
                                 KeyCode::F(4) => {
                                     app.open_embedded_markdown("COPYRIGHT.md", COPYRIGHT_CONTENT, &theme);
                                 }
-                                KeyCode::Char('?') | KeyCode::Char('h') | KeyCode::Char('H') => {
+                                KeyCode::F(5) => {
+                                    app.open_embedded_markdown("PRIVACY.md", PRIVACY_CONTENT, &theme);
+                                }
+                                KeyCode::F(6) => {
+                                    app.open_embedded_markdown("SECURITY.md", SECURITY_CONTENT, &theme);
+                                }
+                                KeyCode::F(7) => {
+                                    app.open_embedded_markdown("CONTRIBUTING.md", CONTRIBUTING_CONTENT, &theme);
+                                }
+                                KeyCode::Char('h') | KeyCode::Char('H') => {
                                     app.open_embedded_markdown("README.md", README_CONTENT, &theme);
                                 }
                                 KeyCode::Up | KeyCode::Char('k') => {
@@ -952,7 +973,7 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
         ),
         Span::styled(" │ ", Style::default().fg(theme.border)),
         Span::styled(
-            "Press ? for help",
+            "Press h for help",
             Style::default()
                 .fg(theme.accent)
                 .add_modifier(Modifier::BOLD),
