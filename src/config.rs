@@ -21,7 +21,7 @@ impl Default for AppConfig {
         Self {
             theme_mode: "auto".to_string(),
             refresh_rate_ms: 100,
-            enable_borderless: true, // Default true for rMonitor
+            enable_borderless: false, // Default false for rMonitor
             enable_toasts: true,
             enable_event_log: true,
         }

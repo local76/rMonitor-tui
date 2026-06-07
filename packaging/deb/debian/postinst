@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+echo "rmonitor installed successfully."
+exit 0

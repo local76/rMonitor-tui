@@ -1,21 +1,26 @@
 [package]
-name = "rmon"
-version = "2.5.2"
+name = "rmonitor"
+version = "2.5.3"
 edition = "2024"
 
 [dependencies]
 ratatui = "0.26"
 crossterm = "0.27"
 sysinfo = "0.30"
-winreg = "0.56.0"
 serde_json = "1.0.150"
-windows-sys = { version = "0.59", features = ["Win32_System_Power"] }
-rcommon = { git = "https://github.com/tourian-dynamics/rCommon.git", branch = "main" }
+rcommon = { git = "https://github.com/local76/rCommon.git", branch = "main" }
 
-[build-dependencies]
+[target.'cfg(windows)'.dependencies]
+winreg = "0.56.0"
+windows-sys = { version = "0.59", features = ["Win32_System_Power"] }
+
+[target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
 
-# To build locally before pushing rCommon to GitHub, uncomment:
-# [patch."https://github.com/tourian-dynamics/rCommon.git"]
-# rcommon = { path = "../rCommon" }
+[package.metadata.generate-rpm]
+auto-req = "no"
+assets = [
+    { source = "target/x86_64-unknown-linux-musl/release/rmonitor", dest = "/usr/bin/rmonitor", mode = "755" }
+]
+
 

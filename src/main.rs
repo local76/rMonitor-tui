@@ -39,7 +39,7 @@ const PRIVACY_CONTENT: &str = include_str!("../PRIVACY.md");
 const SECURITY_CONTENT: &str = include_str!("../SECURITY.md");
 const CONTRIBUTING_CONTENT: &str = include_str!("../CONTRIBUTING.md");
 
-// Damped Harmonic Oscillator (Spring Physics)
+// Damped Harmonitoric Oscillator (Spring Physics)
 struct Spring {
     value: f64,
     velocity: f64,
@@ -190,41 +190,48 @@ fn format_uptime(secs: u64) -> String {
 }
 
 fn query_os_version() -> String {
-    use winreg::RegKey;
-    use winreg::enums::HKEY_LOCAL_MACHINE;
+    #[cfg(windows)]
+    {
+        use winreg::RegKey;
+        use winreg::enums::HKEY_LOCAL_MACHINE;
 
-    let Ok(key) = RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion")
-    else {
-        return "Windows".to_string();
-    };
+        let Ok(key) = RegKey::predef(HKEY_LOCAL_MACHINE)
+            .open_subkey("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion")
+        else {
+            return "Windows".to_string();
+        };
 
-    let mut product_name = key
-        .get_value::<String, _>("ProductName")
-        .unwrap_or_else(|_| "Windows".to_string());
-    let current_build = key
-        .get_value::<String, _>("CurrentBuild")
-        .unwrap_or_default();
-    let display_version = key
-        .get_value::<String, _>("DisplayVersion")
-        .unwrap_or_default();
+        let mut product_name = key
+            .get_value::<String, _>("ProductName")
+            .unwrap_or_else(|_| "Windows".to_string());
+        let current_build = key
+            .get_value::<String, _>("CurrentBuild")
+            .unwrap_or_default();
+        let display_version = key
+            .get_value::<String, _>("DisplayVersion")
+            .unwrap_or_default();
 
-    if product_name.starts_with("Windows 10") {
-        if let Ok(build) = current_build.parse::<u32>() {
-            if build >= 22000 {
-                product_name = product_name.replace("Windows 10", "Windows 11");
+        if product_name.starts_with("Windows 10") {
+            if let Ok(build) = current_build.parse::<u32>() {
+                if build >= 22000 {
+                    product_name = product_name.replace("Windows 10", "Windows 11");
+                }
             }
         }
-    }
 
-    let mut parts = vec![product_name];
-    if !display_version.is_empty() {
-        parts.push(display_version);
+        let mut parts = vec![product_name];
+        if !display_version.is_empty() {
+            parts.push(display_version);
+        }
+        if !current_build.is_empty() {
+            parts.push(format!("(Build {})", current_build));
+        }
+        parts.join(" ")
     }
-    if !current_build.is_empty() {
-        parts.push(format!("(Build {})", current_build));
+    #[cfg(not(windows))]
+    {
+        "Linux".to_string()
     }
-    parts.join(" ")
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -478,7 +485,7 @@ impl App {
                     || name_lower.contains("render")
                     || name_lower.contains("obs")
                     || name_lower.contains("dx")
-                    || name_lower.contains("rmon")
+                    || name_lower.contains("rmonitor")
                 {
                     (scaled_cpu * 2.0).clamp(0.0, 100.0)
                 } else {
@@ -611,6 +618,13 @@ impl App {
     }
 }
 
+#[cfg(windows)]
+unsafe extern "system" {
+    fn GetConsoleWindow() -> *mut std::ffi::c_void;
+    fn ShowWindow(hWnd: *mut std::ffi::c_void, nCmdShow: i32) -> i32;
+    fn SetForegroundWindow(hWnd: *mut std::ffi::c_void) -> i32;
+}
+
 fn main() -> Result<(), io::Error> {
     // Custom panic hook to restore console state and log critical crashes
     std::panic::set_hook(Box::new(|info| {
@@ -653,6 +667,17 @@ fn main() -> Result<(), io::Error> {
     let config = config::AppConfig::load();
     relaunch_in_conhost_if_needed();
 
+    #[cfg(windows)]
+    let hwnd = unsafe {
+        let h = GetConsoleWindow();
+        if !h.is_null() {
+            ShowWindow(h, 0); // SW_HIDE = 0
+            Some(h)
+        } else {
+            None
+        }
+    };
+
     let _instance_guard = match win32::SingleInstanceGuard::try_new() {
         Ok(g) => g,
         Err(e) => {
@@ -664,7 +689,7 @@ fn main() -> Result<(), io::Error> {
     logger::set_event_log_enabled(config.enable_event_log);
     log_message("INFO", "rMonitor starting up...");
 
-    let _title_guard = ConsoleTitleGuard::new("rMon");
+    let _title_guard = ConsoleTitleGuard::new("rMonitor");
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -680,6 +705,14 @@ fn main() -> Result<(), io::Error> {
 
     if _borderless.is_none() {
         win32::center_console_window();
+    }
+
+    #[cfg(windows)]
+    if let Some(h) = hwnd {
+        unsafe {
+            ShowWindow(h, 5); // SW_SHOW = 5
+            SetForegroundWindow(h);
+        }
     }
 
     let backend = CrosstermBackend::new(stdout);
@@ -772,7 +805,7 @@ fn main() -> Result<(), io::Error> {
                                                 ));
                                             }
                                             _ => {
-                                                app.set_status(format!("Failed to kill process (PID: {}). Run rmon as Admin?", pid_val));
+                                                app.set_status(format!("Failed to kill process (PID: {}). Run rmonitor as Admin?", pid_val));
                                             }
                                         }
                                     }
@@ -2867,7 +2900,7 @@ fn run_install() {
         use winreg::RegKey;
         use winreg::enums::*;
         let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-        let path = r"Software\Microsoft\Windows\CurrentVersion\App Paths\rmon.exe";
+        let path = r"Software\Microsoft\Windows\CurrentVersion\App Paths\rmonitor.exe";
         match hkcu.create_subkey(path) {
             Ok((key, _)) => {
                 let _ = key.set_value("", &exe_path.to_string_lossy().to_string());
@@ -2883,7 +2916,7 @@ fn run_install() {
     println!("==================================================");
     println!("Installation complete!");
     println!("You can now launch 'rMonitor' from the Start Menu");
-    println!("or by pressing Win+R and entering 'rmon'!");
+    println!("or by pressing Win+R and entering 'rmonitor'!");
 }
 
 impl App {

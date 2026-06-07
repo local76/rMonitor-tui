@@ -7,7 +7,7 @@ if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Cargo build failed!
     exit /b %ERRORLEVEL%
 )
-copy /y target\release\rmon.exe .\rmon.exe
+copy /y target\release\rmonitor.exe .\rmonitor.exe
 echo =========================================
-echo Build successful! Run .\rmon.exe to start.
+echo Build successful! Run .\rmonitor.exe to start.
 echo =========================================
