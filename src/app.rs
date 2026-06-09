@@ -326,14 +326,14 @@ impl App {
         match self.focus {
             FocusedSection::Cpu => self
                 .processes
-                .sort_by(|a, b| b.cpu.partial_cmp(&a.cpu).unwrap_or(std::cmp::Ordering::Equal)),
+                .sort_by(|a, b| b.cpu.total_cmp(&a.cpu)),
             FocusedSection::Memory => self.processes.sort_by(|a, b| b.mem.cmp(&a.mem)),
             FocusedSection::Disk => self
                 .processes
                 .sort_by(|a, b| (b.disk_read + b.disk_write).cmp(&(a.disk_read + a.disk_write))),
             FocusedSection::Gpu => self
                 .processes
-                .sort_by(|a, b| b.gpu.partial_cmp(&a.gpu).unwrap_or(std::cmp::Ordering::Equal)),
+                .sort_by(|a, b| b.gpu.total_cmp(&a.gpu)),
             FocusedSection::Network => self.processes.sort_by(|a, b| b.net.cmp(&a.net)),
         }
 
