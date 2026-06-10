@@ -3,11 +3,25 @@
 use ratatui::style::Color;
 use ratatui::text::Line;
 
+// Time constants (in seconds)
+const SECONDS_PER_MINUTE: u64 = 60;
+const SECONDS_PER_HOUR: u64 = 3600;
+const SECONDS_PER_DAY: u64 = 86400;
+
+// Byte constants
+const BYTES_PER_KB: f64 = 1024.0;
+const BYTES_PER_MB: f64 = 1024.0 * 1024.0;
+const BYTES_PER_GB: f64 = 1024.0 * 1024.0 * 1024.0;
+
+// Fractional block constants for smooth rendering
+const FRACTION_STEPS: usize = 8;
+const FRACTION_STEP_VALUE: f64 = 8.0;
+
 /// Format an uptime in seconds as "Xd Yh Zm" / "Yh Zm" / "Zm".
 pub fn format_uptime(secs: u64) -> String {
-    let days = secs / 86400;
-    let hours = (secs % 86400) / 3600;
-    let minutes = (secs % 3600) / 60;
+    let days = secs / SECONDS_PER_DAY;
+    let hours = (secs % SECONDS_PER_DAY) / SECONDS_PER_HOUR;
+    let minutes = (secs % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE;
     if days > 0 {
         format!("{}d {}h {}m", days, hours, minutes)
     } else if hours > 0 {
@@ -19,7 +33,7 @@ pub fn format_uptime(secs: u64) -> String {
 
 /// Render a horizontal spring bar with block characters.
 pub fn draw_spring_bar(width: u16, value: f64, max: f64) -> String {
-    if width == 0 {
+    if width == 0 || max == 0.0 {
         return String::new();
     }
     let pct = (value / max).clamp(0.0, 1.0);
@@ -28,9 +42,9 @@ pub fn draw_spring_bar(width: u16, value: f64, max: f64) -> String {
     let mut bar = "█".repeat(total_blocks);
     if total_blocks < width as usize {
         let fraction = blocks_count_float - total_blocks as f64;
-        let fraction_idx = (fraction * 8.0) as usize;
+        let fraction_idx = (fraction * FRACTION_STEP_VALUE) as usize;
         const BLOCKS: [char; 9] = [' ', '▏', '▎', '▍', '▌', '▋', '▊', '▉', '█'];
-        bar.push(BLOCKS[fraction_idx.clamp(0, 8)]);
+        bar.push(BLOCKS[fraction_idx.clamp(0, FRACTION_STEPS)]);
     }
     while bar.chars().count() < width as usize {
         bar.push(' ');
@@ -40,10 +54,10 @@ pub fn draw_spring_bar(width: u16, value: f64, max: f64) -> String {
 
 /// Format a bytes-per-second value with adaptive units.
 pub fn format_speed(bytes_per_sec: f64) -> String {
-    if bytes_per_sec >= 1024.0 * 1024.0 {
-        format!("{:.1} MB/s", bytes_per_sec / 1024.0 / 1024.0)
-    } else if bytes_per_sec >= 1024.0 {
-        format!("{:.1} KB/s", bytes_per_sec / 1024.0)
+    if bytes_per_sec >= BYTES_PER_MB {
+        format!("{:.1} MB/s", bytes_per_sec / BYTES_PER_MB)
+    } else if bytes_per_sec >= BYTES_PER_KB {
+        format!("{:.1} KB/s", bytes_per_sec / BYTES_PER_KB)
     } else {
         format!("{:.0} B/s", bytes_per_sec)
     }
@@ -51,9 +65,9 @@ pub fn format_speed(bytes_per_sec: f64) -> String {
 
 /// Format a byte total with adaptive units.
 pub fn format_total_bytes(bytes: u64) -> String {
-    let kb = bytes as f64 / 1024.0;
-    let mb = kb / 1024.0;
-    let gb = mb / 1024.0;
+    let kb = bytes as f64 / BYTES_PER_KB;
+    let mb = kb / BYTES_PER_KB;
+    let gb = mb / BYTES_PER_KB;
     if gb >= 1.0 {
         format!("{:.2} GB", gb)
     } else if mb >= 1.0 {

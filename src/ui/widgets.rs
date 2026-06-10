@@ -12,6 +12,13 @@ use ratatui::{
 use crate::app::App;
 use crate::metrics_format::{format_speed, format_total_bytes};
 
+// CPU usage thresholds for color coding
+const CPU_HIGH_USAGE: f32 = 80.0;
+const CPU_MEDIUM_USAGE: f32 = 40.0;
+
+// Byte conversion constants
+const BYTES_PER_GB: f64 = 1024.0 * 1024.0 * 1024.0;
+
 pub fn render_cpu_details(f: &mut Frame, area: Rect, app: &App, border_color: Color) {
     let theme = &*app.theme;
     let inner = area.width as usize;
@@ -24,9 +31,9 @@ pub fn render_cpu_details(f: &mut Frame, area: Rect, app: &App, border_color: Co
         for (i, cpu) in chunk.iter().enumerate() {
             let idx = cpus.iter().position(|x| std::ptr::eq(x, cpu)).unwrap_or(0);
             let usage = cpu.cpu_usage();
-            let color = if usage > 80.0 {
+            let color = if usage > CPU_HIGH_USAGE {
                 Color::Rgb(255, 85, 85)
-            } else if usage > 40.0 {
+            } else if usage > CPU_MEDIUM_USAGE {
                 Color::Rgb(255, 215, 0)
             } else {
                 Color::Rgb(80, 250, 123)
@@ -54,13 +61,13 @@ pub fn render_cpu_details(f: &mut Frame, area: Rect, app: &App, border_color: Co
 pub fn render_memory_details(f: &mut Frame, area: Rect, app: &App, border_color: Color) {
     let pink = Color::Rgb(255, 121, 198);
     let theme = &*app.theme;
-    let total_ram = app.sys.total_memory() as f64 / 1024.0 / 1024.0 / 1024.0;
-    let used_ram = app.sys.used_memory() as f64 / 1024.0 / 1024.0 / 1024.0;
-    let free_ram = app.sys.free_memory() as f64 / 1024.0 / 1024.0 / 1024.0;
-    let avail_ram = app.sys.available_memory() as f64 / 1024.0 / 1024.0 / 1024.0;
-    let total_swap = app.sys.total_swap() as f64 / 1024.0 / 1024.0 / 1024.0;
-    let used_swap = app.sys.used_swap() as f64 / 1024.0 / 1024.0 / 1024.0;
-    let free_swap = app.sys.free_swap() as f64 / 1024.0 / 1024.0 / 1024.0;
+    let total_ram = app.sys.total_memory() as f64 / BYTES_PER_GB;
+    let used_ram = app.sys.used_memory() as f64 / BYTES_PER_GB;
+    let free_ram = app.sys.free_memory() as f64 / BYTES_PER_GB;
+    let avail_ram = app.sys.available_memory() as f64 / BYTES_PER_GB;
+    let total_swap = app.sys.total_swap() as f64 / BYTES_PER_GB;
+    let used_swap = app.sys.used_swap() as f64 / BYTES_PER_GB;
+    let free_swap = app.sys.free_swap() as f64 / BYTES_PER_GB;
     let header = Row::new(vec!["Metric Type", "Allocated Value"])
         .style(Style::default().fg(pink).add_modifier(Modifier::BOLD))
         .bottom_margin(1);
@@ -99,8 +106,8 @@ pub fn render_disk_details(f: &mut Frame, area: Rect, app: &App, border_color: C
         .style(Style::default().fg(purple).add_modifier(Modifier::BOLD))
         .bottom_margin(1);
     let rows = app.disks.iter().map(|disk| {
-        let total = disk.total_space() as f64 / 1024.0 / 1024.0 / 1024.0;
-        let avail = disk.available_space() as f64 / 1024.0 / 1024.0 / 1024.0;
+        let total = disk.total_space() as f64 / BYTES_PER_GB;
+        let avail = disk.available_space() as f64 / BYTES_PER_GB;
         let used = total - avail;
         Row::new(vec![
             Cell::from(disk.mount_point().to_string_lossy().to_string())
