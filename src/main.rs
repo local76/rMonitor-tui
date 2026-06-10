@@ -14,7 +14,6 @@ mod app;
 mod backend;
 mod config;
 mod diagnostics;
-mod docs;
 mod gpu_names;
 mod metrics_format;
 mod json;
@@ -112,6 +111,6 @@ fn main() -> io::Result<()> {
             _ => {}
         }
     }
-    let _ = docs::doc_for_f_key(1);
+    let _ = library::apps::chrome::doc_for_f_key(1);
     run_tui()
 }

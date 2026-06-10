@@ -62,14 +62,23 @@ pub struct AppTheme {
 }
 
 impl AppTheme {
-    pub fn new(
-        dark: bool,
-        accent: Color,
+    /// Build from an already-constructed `ThemeColors`. Picks the dark/light
+    /// highlight by inspecting the base's `text_main` lightness — a dark
+    /// text usually means a light background, so the highlight choice flips
+    /// accordingly. Used by the `current_theme` migration in 4.3.
+    pub fn from_base(
+        base: library::interface::tui::theme::ThemeColors,
         dark_highlight: Color,
         light_highlight: Color,
     ) -> Self {
+        // Heuristic: dark themes have a bright `text_main`; light themes have
+        // a dark one. Use the `R` channel as a proxy.
+        let dark = match base.text_main {
+            Color::Rgb(r, _, _) => r > 128,
+            _ => true,
+        };
         Self {
-            base: library::interface::tui::theme::get_theme(dark, accent),
+            base,
             highlight_bg: if dark { dark_highlight } else { light_highlight },
         }
     }
@@ -125,18 +134,8 @@ pub struct App {
 
 impl App {
     pub fn new(config: AppConfig) -> Self {
-        let dark = match config.theme_mode.as_str() {
-            "dark" => true,
-            "light" => false,
-            _ => library::platform::native::sys_info::query_dark_mode(),
-        };
-        let accent =
-            Color::Rgb(
-                library::platform::native::sys_info::query_accent_color().0,
-                library::platform::native::sys_info::query_accent_color().1,
-                library::platform::native::sys_info::query_accent_color().2,
-            );
-        let theme = AppTheme::new(dark, accent, Color::Rgb(255, 0, 127), Color::Rgb(0, 100, 220));
+        let base_theme = library::ui::theme::current_theme(&config.theme_mode);
+        let theme = AppTheme::from_base(base_theme, Color::Rgb(255, 0, 127), Color::Rgb(0, 100, 220));
 
         let sys = System::new();
         let disks = Disks::new_with_refreshed_list();
@@ -198,13 +197,8 @@ impl App {
     }
 
     pub fn refresh_theme(&mut self) {
-        let dark = match self.config.theme_mode.as_str() {
-            "dark" => true,
-            "light" => false,
-            _ => library::platform::native::sys_info::query_dark_mode(),
-        };
-        let (r, g, b) = library::platform::native::sys_info::query_accent_color();
-        self.theme = AppTheme::new(dark, Color::Rgb(r, g, b), Color::Rgb(255, 0, 127), Color::Rgb(0, 100, 220));
+        let base_theme = library::ui::theme::current_theme(&self.config.theme_mode);
+        self.theme = AppTheme::from_base(base_theme, Color::Rgb(255, 0, 127), Color::Rgb(0, 100, 220));
     }
 
     pub fn update_metrics(&mut self) {

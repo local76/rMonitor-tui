@@ -209,12 +209,5 @@ pub fn render_markdown_modal(f: &mut Frame, parent: Rect, app: &App) {
 }
 
 /// A constant slice of the docs F1..F7 open, used by the help modal.
-pub const DOC_FILES: &[&str] = &[
-    "README.md",
-    "SUPPORT.md",
-    "LICENSE.md",
-    "COPYRIGHT.md",
-    "PRIVACY.md",
-    "SECURITY.md",
-    "CONTRIBUTING.md",
-];
+/// Re-exported from library's chrome module so we don't keep two copies in sync.
+pub use library::apps::chrome::DOC_FILES;
