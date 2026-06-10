@@ -6,9 +6,9 @@ use std::{
 };
 
 use crossterm::event::{self, Event};
-use library::lifecycle::background::file_log;
-use library::lifecycle::foreground::window::hide_console_at_startup;
-use library::lifecycle::foreground::tui_bootstrap::{bootstrap_tui, shutdown_tui, TuiBootstrapConfig};
+use library::apps::file_log;
+use library::apps::window::hide_console_at_startup;
+use library::apps::tui_bootstrap::{bootstrap_tui, shutdown_tui, TuiBootstrapConfig};
 
 mod app;
 mod backend;
@@ -48,7 +48,7 @@ fn run_tui() -> io::Result<()> {
     let mut last_refresh = Instant::now();
 
     while !app.should_quit {
-        if library::lifecycle::foreground::tui_bootstrap::is_app_shutting_down() {
+        if library::apps::tui_bootstrap::is_app_shutting_down() {
             break;
         }
         app.status.tick();
