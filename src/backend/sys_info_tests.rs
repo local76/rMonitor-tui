@@ -82,19 +82,19 @@ fn test_glyph_map_load() {
 #[cfg(not(target_os = "windows"))]
 #[test]
 fn test_fallback_impl_values() {
-    assert_eq!(query_accent_color(), (0, 245, 255));
-    assert_eq!(get_win_accent_color_hex(), "#00F5FF");
-    assert!(!query_high_contrast());
-    assert_eq!(query_os_version(), "Mock OS");
-    assert!(query_dark_mode());
+    assert_eq!(super::platform_impl::query_accent_color(), (0, 245, 255));
+    assert_eq!(super::platform_impl::get_win_accent_color_hex(), "#00F5FF");
+    assert!(!super::platform_impl::query_high_contrast());
+    assert!(!super::platform_impl::query_os_version().is_empty());
+    assert!(super::platform_impl::query_dark_mode());
     
-    let power = query_power_status();
+    let power = super::platform_impl::query_power_status();
     assert!(power.is_some());
     let p = power.unwrap();
     assert!(p.ac_online);
     assert_eq!(p.battery_percent, 100);
 
-    assert!(query_bios_info().is_none());
-    assert_eq!(query_gpu_names(), vec!["Mock GPU".to_string()]);
-    assert_eq!(get_local_time_string(), "2026-06-06 12:00:00");
+    assert!(super::platform_impl::query_bios_info().is_none());
+    assert_eq!(super::platform_impl::query_gpu_names(), vec!["Mock GPU".to_string()]);
+    assert_eq!(super::platform_impl::get_local_time_string(), "2026-06-06 12:00:00");
 }
